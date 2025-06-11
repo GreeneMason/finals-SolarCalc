@@ -1,5 +1,4 @@
-﻿zip_code,city,state,average_irradiance_kwh_per_sqm_per_day
-98101,Seattle,WA,3.5
+﻿98101,Seattle,WA,3.5
 98102,Seattle,WA,3.6
 98103,Seattle,WA,3.4
 98104,Seattle,WA,3.5
