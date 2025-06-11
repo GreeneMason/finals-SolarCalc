@@ -17,16 +17,22 @@ public class SolarCalc {
 		createHash();
 		
 		//collect answers from user
-		collectZip();
-		collectRoofSize();
+		zipcode = collectZip();
+		roofSize = collectRoofSize();
 		
 		//estimate startup cost
-		calculateInstallCosts();
+		System.out.println("The cost of installing Monocrystalline panels; " + calculateInstallCostsMono(roofSize));
+		System.out.println("The cost of installing Polycrystalline panels; " + calculateInstallCostsPoly(roofSize));
 		
 		//calculate savings per month to find the estimated time to break even 
-		calculateSavings();
+		System.out.println("Years till breaking even on investment; " + calculateSavingsMono());
+		System.out.println("Years till breaking even on investment; " + calculateSavingsPoly());
+		
+		
 	}
-	
+	/** 
+	 * A method that reads the .txt file and creats a hashMap, only works with a 4 column format seperated by commas. 
+	 */
 	public static void createHash (){
 		try(Stream<String> lines = Files.lines(Paths.get("zipToIrradiance.txt"))){;
 		zipToRad = lines
@@ -42,33 +48,54 @@ public class SolarCalc {
 		}
 		}
 	
-	
-	public static void collectZip(){
+	/** A method to collect the zipcode
+	 * @return String representing a zipcode
+	 */
+	public static String collectZip(){
 		System.out.println("Enter your Zipcode");
 		Scanner scanner = new Scanner (System.in);
-		zipcode = scanner.next();
+		String temp = scanner.next();
+		if(temp.length() != 5){
+			System.out.println("Zipcode invalid, Washington Zipcodes only");
+			collectZip();
+		}
+		return temp;
 	}
-	
-	public static void collectRoofSize(){
+	/** A method to collect the rood size in meters squared
+	 * @return double representing the roof size in meters squared
+	 */
+	public static double collectRoofSize(){
 		System.out.println("Enter your roof size (in terms of squared meters)");
 		Scanner scanner = new Scanner (System.in);
-		roofSize= scanner.nextDouble();
+		double temp = scanner.nextDouble();
+		return temp;
 	}
-	
-	public static void calculateInstallCosts(){
+	/** A method to calulate the intallation cost for
+	 * 
+	 */
+	public static double calculateInstallCostsMono(double roofSize){
 		panels = (roofSize*.75)/1.6;//average panel is 1.6 meters squared
 		double laborCost = panels * 300;//average labor cost is about $300 per panel according to https://www.consumeraffairs.com/solar-energy/how-much-do-solar-panels-cost.html#:~:text=Labor:%20Solar%20installation%20costs%20include,caps%20residential%20fees%20at%20$450)
 		double mountCost = panels * 200;//average cost of hardware for mounting
 		monoInstallCost = (laborCost + mountCost + (panels * 300.0) + 2000.0); //2000 for the inverters and 300 per monocrystalline panel
-		polyInstallCost = (laborCost + mountCost + (panels * 200.0) + 2000.0); //200 per polycrystalline panel
-		System.out.println("The initial cost for installing monocrystalline panels; " + monoInstallCost);
-		System.out.println("The initial cost for installing polycrystalline panels; " + polyInstallCost);
+		return monoInstallCost;
 	}
-	/**A method that calculates and prints the savings dependant on the irradiance, roof rize, and calculates for both mono and polycrystalline
-	 * 
+	
+	/** A method to calulate the intallation cost for
 	 * 
 	 */
-	public static void calculateSavings(){
+	public static double calculateInstallCostsPoly(double roofSize){
+		panels = (roofSize*.75)/1.6;//average panel is 1.6 meters squared
+		double laborCost = panels * 300;//average labor cost is about $300 per panel according to https://www.consumeraffairs.com/solar-energy/how-much-do-solar-panels-cost.html#:~:text=Labor:%20Solar%20installation%20costs%20include,caps%20residential%20fees%20at%20$450)
+		double mountCost = panels * 200;//average cost of hardware for mounting
+		polyInstallCost = (laborCost + mountCost + (panels * 200.0) + 2000.0);//2000 for the inverters and 200 per polycrystalline panel
+		return polyInstallCost;
+	}
+	/**A method that calculates and prints the savings dependant on the irradiance, roof rize, and calculates for monocrystalline panels
+	 * 
+	 * @return a double representing the ammount of years needed to break even
+	 */
+	public static double calculateSavingsMono(){
 		//find the total savings in a year
 		double rad = zipToRad.get(zipcode);
 		double allWatts = panels * 300.0;
@@ -78,9 +105,24 @@ public class SolarCalc {
 		double yearlySavings = yearlyWatts * .15;//.15 cents is how much PSE charges for one kwh
 		//print the results
 		double monoYearsTillEven = monoInstallCost/yearlySavings;
+		return monoYearsTillEven;
+	}
+	
+	/**A method that calculates and prints the savings dependant on the irradiance, roof rize, and calculates for polycrystalline panels
+	 * 
+	 * @return a double representing the ammount of years needed to break even
+	 */
+	public static double calculateSavingsPoly(){
+		//find the total savings in a year
+		double rad = zipToRad.get(zipcode);
+		double allWatts = panels * 300.0;
+		double dailyWatts = (rad * allWatts)/1000;//(the total watts based on solar irradiance/ 1000) this converts the totals watts per day to kilo watts per day
+		double yearlyWatts = dailyWatts * 365;
+		
+		double yearlySavings = yearlyWatts * .15;//.15 cents is how much PSE charges for one kwh
+		//print the results
 		double polyYearsTillEven = polyInstallCost/yearlySavings;
-		System.out.println("Years till you break even on investment(Monocrystalline); " + monoYearsTillEven);
-		System.out.println("Years till you break even on investment(Polycrystalline); " + polyYearsTillEven);
+		return polyYearsTillEven;
 	}
 }
 
